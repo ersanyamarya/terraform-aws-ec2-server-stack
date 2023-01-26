@@ -46,7 +46,8 @@ This Terraform module creates a list of EC2 instances and sets them up according
 
 ```hcl
 module "ec2_server_stack" {
-  source = "ersanyamarya/ec2_server_stack"
+  source = "ersanyamarya/ec2_server_stack/aws"
+  version = "0.0.1"
   instances = [
     {
       ami = "ami-0c94855ba95c71c99"
