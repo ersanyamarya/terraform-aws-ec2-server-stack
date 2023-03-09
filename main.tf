@@ -30,6 +30,23 @@ resource "aws_instance" "instance" {
   }
 }
 
+# This code creates an elastic IP for each instance defined in the variable instances and hasElasticIp set to true
+
+resource "aws_eip" "eip" {
+  count = length([
+    for instance in var.instances :
+    instance if instance.hasElasticIp
+  ])
+  instance = aws_instance.instance[count.index].id
+  tags = merge(
+    {
+      Name      = "${var.instances[count.index].name}-elastic-ip"
+      Terraform = true
+    },
+    var.global_tags,
+  )
+}
+
 
 # This code creates a list of route53_records by merging a list of instances.
 # Each instance has a list of aws_route53_record. Each aws_route53_record
@@ -59,6 +76,9 @@ resource "aws_route53_record" "route53_record" {
   zone_id  = each.value.zone_id
   ttl      = each.value.ttl
   records  = each.value.records
+  depends_on = [
+    aws_instance.instance
+  ]
 }
 
 
@@ -94,17 +114,6 @@ resource "aws_security_group" "security_group" {
       to_port          = egress.value
       protocol         = "tcp"
       cidr_blocks      = ["0.0.0.0/0"]
-      ipv6_cidr_blocks = ["::/0"]
-    }
-  }
-
-  dynamic "ingress" {
-    count = length(var.instances[count.index].ports.specialPermissions)
-    cocontent {
-      from_port        = var.instances[count.index].ports.specialPermissions[count.index].port
-      to_port          = var.instances[count.index].ports.specialPermissions[count.index].port
-      protocol         = "tcp"
-      cidr_blocks      = [var.instances[count.index].ports.specialPermissions[count.index].cidr]
       ipv6_cidr_blocks = ["::/0"]
     }
   }

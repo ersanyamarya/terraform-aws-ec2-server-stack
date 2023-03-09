@@ -12,7 +12,6 @@ variable "instances" {
       egress  = list(number)
     })
     hasElasticIp = bool
-    tags         = map(string)
     aws_route53_record = list(object({
       zone_id = string
       name    = string
